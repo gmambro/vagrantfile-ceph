@@ -1,0 +1,26 @@
+---
+- hosts: all
+  remote_user: vagrant
+  become: true
+  become_user: root
+  tasks:
+    - name: install ntp
+      yum: name={{item}} state=latest
+      with_items:
+        - ntp
+        - ntpdate
+        - ntp-doc
+
+- hosts: nodes
+  remote_user: vagrant
+  become: true
+  become_user: root
+  tasks:
+    - user:
+        name: cephdeploy
+        comment: "Ceph deploy user"
+    - name: Set authorized key took from file
+      authorized_key:
+        user: cephdeploy
+        state: present
+        key: "{{ lookup('file', '/home/cephdeploy/.ssh/id_rsa.pub') }}"
