@@ -1,4 +1,29 @@
 ---
+- hosts: admin
+  become: true
+  become_user: root
+  tasks:
+    - name: append host names
+      blockinfile:
+        dest: /etc/hosts
+        content: "{{ lookup('file', '/vagrant/hosts') }}"
+    - name: install ceph packages on admin
+      yum: name={{item}} state=latest
+      with_items:
+        - centos-release-ceph-jewel
+        - ceph-deploy
+    - name: create cephdeploy user and ssh key
+      user:
+        name: cephdeploy
+        comment: "Ceph deploy user"
+        generate_ssh_key: yes
+        ssh_key_bits: 2048
+        ssh_key_file: .ssh/id_rsa
+    - name: copy cephdeploy ssh key to tmp
+      fetch:
+         src: /home/cephdeploy/.ssh/id_rsa.pub
+         dest: /tmp/ceph_ssh_id.pub
+         flat: true
 - hosts: all
   remote_user: vagrant
   become: true
@@ -23,4 +48,4 @@
       authorized_key:
         user: cephdeploy
         state: present
-        key: "{{ lookup('file', '/home/cephdeploy/.ssh/id_rsa.pub') }}"
+        key: "{{ lookup('file', '/tmp/ceph_ssh_id.pub') }}"

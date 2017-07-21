@@ -6,6 +6,8 @@ NODE_COUNT = 3
 
 Vagrant.configure("2") do |config|
 
+  config.vm.synced_folder ".", "/vagrant", type: "virtualbox"
+
   config.vm.define "admin", primary: true do |admin|
     admin.vm.box = BOX_IMAGE
     admin.vm.provider "virtualbox" do |vb|
@@ -17,18 +19,10 @@ Vagrant.configure("2") do |config|
     admin.vm.network :private_network, ip: "10.10.0.10"
 
     admin.vm.provision "ansible_local" do |ansible|
-      ansible.playbook = "admin-prepare.yml"
-      ansible.verbose  = true
-      ansible.install  = true
-      ansible.config_file    = "ansible.cfg"
-    end
-
-    admin.vm.provision "ansible_local" do |ansible|
       ansible.playbook = "playbook.yml"
       ansible.verbose        = true
       ansible.limit          = "all" # or only "nodes" group, etc.
       ansible.inventory_path = "inventory"
-      ansible.config_file    = "ansible.cfg"
     end
   end
 
