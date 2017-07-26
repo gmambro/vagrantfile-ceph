@@ -49,3 +49,27 @@
         user: cephdeploy
         state: present
         key: "{{ lookup('file', '/tmp/ceph_ssh_id.pub') }}"
+    - name: Create sudoers file for cephdeploy
+      copy:
+        dest: /etc/sudoers.d/cephdeploy
+        content: 'cephdeploy ALL = (root) NOPASSWD:ALL'
+    - lineinfile:
+        path: /etc/sudoers
+        state: present
+        regexp: 'Defaults requiretty'
+        line: 'Defaults:ceph !requiretty'
+        validate: 'visudo -cf %s' 
+
+    - name: Put SELinux in permissive mode
+      selinux:
+        policy: targeted
+        state: permissive
+
+- hosts: admin
+  become: true
+  become_user: cephdeploy
+  tasks:
+    - name: create config dir 
+      file:
+        path: /home/cephdeploy/my-cluster
+        state: directory
